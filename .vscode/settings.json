@@ -1,0 +1,10 @@
+{
+  "files.exclude": {
+    ".git": true,
+    "Pipfile.lock": true,
+    "Pipfile": true,
+    "**/__pycache__": true,
+    "**/__pycache__.*": true,
+    ".flake8": true
+  }
+}

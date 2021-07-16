@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "/home/ubuntu/python_projcts/Discord_Bot_Wkwm2/"
+		}
+	],
+	"settings": {
+		"python.linting.lintOnSave": true,
+		"python.linting.pylintEnabled": false,
+		"python.linting.flake8Enabled": true,
+		"python.formatting.blackPath": "/home/ubuntu/.local/share/virtualenvs/Discord_Bot_Wkwm2-QH-40ORN/bin/black",
+	}
+}
