@@ -4,3 +4,4 @@ test_ds.py
 .flake8
 Pipfile.lock
 testfolder
+__pycache__
