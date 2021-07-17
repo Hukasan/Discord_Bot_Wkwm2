@@ -8,6 +8,9 @@ discord = {extras = ["voice"], version = "*"}
 botocore = "*"
 boto3 = "*"
 emoji = "*"
+pykakasi = "*"
+neologdn = "*"
+romkan = "*"
 
 [dev-packages]
 flake8 = "*"

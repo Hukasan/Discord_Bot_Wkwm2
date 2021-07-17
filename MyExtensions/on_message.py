@@ -1,6 +1,8 @@
 from discord import Message
 from discord.ext import commands
 
+from bot_define import MyBot
+
 
 class On_Message(commands.Cog):
     """
