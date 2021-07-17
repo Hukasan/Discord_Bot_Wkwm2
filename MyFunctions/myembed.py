@@ -1,7 +1,7 @@
 from discord import Embed, Message, PartialMessage
 
 from datetime import datetime
-from apps.methods import dainyu
+from MyFunctions.methods import dainyu
 from copy import copy
 from emoji import UNICODE_EMOJI
 

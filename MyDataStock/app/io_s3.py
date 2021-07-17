@@ -14,9 +14,9 @@ s3 = boto3.resource(
 
 
 class json_io_s3:
-    def __init__(self, name: str):
-        folder_name = "wkwm2"
-        self.key = folder_name + "/" + name + ".json"
+    def __init__(self, name_project: str, name_file: str):
+        folder_name = name_project
+        self.key = folder_name + "/" + name_file + ".json"
         self.obj = s3.Object(self.key)
         try:
             self.obj.load()
@@ -38,11 +38,62 @@ class json_io_s3:
         return json.load(self.obj.get()["Body"])
 
 
-if __name__ == "__main__":
-    name = "servers"
-    name = "setup_test"
-    with open("testfolder/" + name + ".json") as f:
-        data = json.load(f)
-        target = json_io_s3(name)
-        target.put(data)
-        print(target.get())
+class DS:
+    def __init__(
+        self, name_file, name_project: str
+    ):
+        self.io = json_io_s3(name_file="data_bot", name_project=name_project)
+
+    def push(self):
+        dict_data = self.io.get()
+        temp_dict = dict()
+        if dict_data.get(self.id):
+            for key in dict_data.get(self.id).keys():
+                exec(f"temp=self.{key}")
+                exec("temp_dict.update({key:temp})")
+            temp_dict = {self.id: temp_dict}
+        dict_data.update(temp_dict)
+        self.io.put(dict_data)
+
+    def pull(self):
+        dict_data = self.io.get()
+        for symbol in list(dict_data.keys()):
+            exec(f"self.{symbol}={str(dict_data.get(symbol))}")
+        return self
+
+
+class DS_empty:
+    id = None
+
+    def __init__(self, id):
+        self.id = id
+
+    def change(self, name, value):
+        exec(f"self.{str(name)}={value}")
+
+
+class DS_mass:
+
+    dict_DS = dict()
+
+    def __init__(
+        self, name_file, name_project: str, DS_empty
+    ):
+        self.io = json_io_s3(name_file=name_file, name_project=name_project)
+        self.DS_empty = DS_empty
+
+    def pull(self):
+        dict_servers = self.io.get()
+
+        for key_1 in dict_servers.keys():
+            dict_server = dict_servers.get(key_1)
+            if isinstance(dict_server, dict):
+                temp_DS = self.DS_empty(key_1)
+                for key_2 in dict_server.keys():
+                    temp = f"temp_DS.change('{key_2}',dict_server.get('{key_2}'))"
+                    exec(temp)
+                self.dict_DS.update({key_1: temp_DS})
+        return self
+
+    def get(self, id):
+        return self.dict_DS.get(str(id))

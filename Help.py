@@ -2,9 +2,8 @@ from discord import Emoji
 from discord.ext.commands import Cog, Bot, HelpCommand, Group, Command, Context
 import sys
 
-from Functions.myembed import MyEmbed
+from MyFunctions.myembed import MyEmbed
 from MyFunctions.inputassist import hyokiyure
-from MyDataStock import file_io_s3 as fis
 
 EMBED_IDENTIFIER = "HELP_TREE"
 EMBED_IDENTIFIER_ERROR = "HELP_ERROR"
@@ -18,8 +17,7 @@ class Help(HelpCommand):
         self.command_attrs["description"] = "このメッセージを表示"
         self.command_attrs["help"] = "このBOTのヘルプコマンドです。"
         self.command_attrs["aliases"] = ["he", "herupu", "bot", "info"]
-        self.help_mod = fis.json_io_s3("help").iterate()
-        self.help_dict = self.help_mod.get()
+        self.help_dict = dict()
         self.dfembed = MyEmbed().clone()
         self.dfembed.change(
             help_mode=True,
@@ -103,7 +101,6 @@ class Help(HelpCommand):
             cog_name_list.append(cog.__class__.__name__)
         # opt = me.MyEmbed
         self.help_dict.update({"bot": cog_name_list})
-        self.help_mod.put(self.help_dict)
         opt = MyEmbed
         opt = self.dfembed.clone(self.context)
         opt.change(
@@ -144,7 +141,7 @@ class Help(HelpCommand):
                         self.help_dict[cog.qualified_name].append(cmd.name)
                     else:
                         self.help_dict.update({cog.qualified_name: [cmd.name]})
-                    self.help_mod.put(self.help_dict)
+
                     temp = cmd.name
                     embed.add(
                         name=f"> [{count}] {self.context.bot.command_prefix[0]}{cmd.name}",
@@ -201,7 +198,6 @@ class Help(HelpCommand):
             )
         prefix = self.context.prefix if self.context.prefix else self.context.bot.command_prefix[0]
         self.help_dict[group.name] = cmd_name_list
-        self.help_mod.put(self.help_dict)
 
         embed.change(
             header="⌘(親)Help",
@@ -260,7 +256,7 @@ class Help(HelpCommand):
 
     async def send_error_message(self, error):
         embed = MyEmbed(self.context)
-        embed.change(header="ヘルプエラー", greeting=f"{self.context.author.mention}", footer_arg=EMBED_IDENTIFIER_ERROR)
+        embed.change(header="😢Helpエラー", greeting=f"{self.context.author.mention}", footer_arg=EMBED_IDENTIFIER_ERROR)
         slist = hyokiyure(self.context.kwargs.get("command"), self.context.bot.all_commands.keys())
         for cmd in slist:
             if cmd:
@@ -290,7 +286,7 @@ class Help(HelpCommand):
 
 
 async def era_help_tree(bot: Bot, usr_id: int, ctx: Context, react: Emoji, footer_arg: list):
-    help_dict = fis.json_io_s3("help").get()
+    help_dict = bot.help_command.help_dict
     target = str()
 
     for index, emoji in enumerate(bot.help_command.emojis):
@@ -304,10 +300,9 @@ async def era_help_tree(bot: Bot, usr_id: int, ctx: Context, react: Emoji, foote
     await ctx.send_help(target)
 
 
-def setup(bot: Bot):
-    bot.help_command = Help()
-    bot.funcs.update(
-        {
-            EMBED_IDENTIFIER: era_help_tree,
-        }
-    )
+# def setup(bot: Bot):
+#     bot.funcs.update(
+#         {
+#             EMBED_IDENTIFIER: era_help_tree,
+#         }
+#     )

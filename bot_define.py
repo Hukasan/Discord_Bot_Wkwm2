@@ -1,9 +1,12 @@
-from file_io.file_io_s3 import json_io_s3 as jis
+from MyDataStock.DataStocks import DS_servers, DS_bot, DS_server
 from discord.ext.commands import Bot
 from discord import Intents, Guild, Role
 
 from discord.ext.tasks import loop
+from Help import Help
+from os import environ
 
+from pathlib import Path
 
 intents = Intents.all()
 intents.typing = False
@@ -17,16 +20,12 @@ intents.dm_reactions = False
 
 class MyBot(Bot):
 
+    name_project = str()
     funcs = {}
     list_load_first = False
     list_func_loop = []
     list_func_ready = []
     ms_dict = {}
-    mod_setup = jis("setup_test").iterate()
-    dict_setup = mod_setup.get()
-    mod_servers = jis("servers_test").iterate()
-    dict_server = mod_servers.get()
-    help_dict = {}
     pages = {}
     emojis_numbers = [
         "1️⃣",
@@ -42,13 +41,20 @@ class MyBot(Bot):
     ]
 
     def __init__(self):
-
+        self.ds_bot = DS_bot().pull()
         super().__init__(
-            description=self.dict_setup["DESC"],
+            description=self.ds_bot.desc,
             intents=intents,
             case_insensitive=True,
+            command_prefix=self.ds_bot.prefix
         )
-        self.list_func_loop.append(self.loop_start)
+        extentions_folder = environ["DISCORD_BOT_EXTENTIONS_FOLDER"]
+        self.name_project = environ["DISCORD_BOT_PROJECT_NAME"]
+        self.help_command = Help()
+        self.list_func_loop.append(self.loop_update)
+
+        for f in Path(extentions_folder).glob("*.py"):
+            self.load_extension(f"{extentions_folder}.{f.stem}")
 
     async def on_ready(self):
         if not (self.list_load_first):
@@ -56,37 +62,25 @@ class MyBot(Bot):
         else:
             self.list_load_first = False
 
-        self.update_servers()
+        self.update_ds()
 
-        if self.list_func_loop:
-            for func in self.list_func_loop:
-                await func()
+        for func in self.list_func_loop:
+            await func.start()
         if self.list_func_ready:
             for func in self.list_func_ready:
                 await func()
 
-    def update_db(self):
-        self.dict_server = self.mod_servers.get()
-        self.dict_setup = self.mod_setup.get()
-        for g in self.guilds:
-            server = self.dict_server.get(str(g.id))
-            if server:
-                if g.rules_channel:
-                    server.update({"rules_channel": g.rules_channel.id})
-            else:
-                if g.rules_channel:
-                    self.dict_server.update({g.id: {"rules_channel": g.rules_channel.id}})
-                else:
-                    self.dict_server.update({g.id: {"rules_channel": None}})
-            for role in g.roles:
-                if role.is_bot_managed and (role.name == self.user.name):
-                    self.dict_server[str(g.id)].update({"bot_role": role.id})
-        self.mode_servers.put(self.dict_server)
-
-    async def loop_start(self):
-        await self.loop_update.start()
+    def update_ds(self):
+        ds = DS_servers().pull()
+        for guild in self.guilds:
+            guild = Guild
+            if not(ds.get(guild.id)):
+                ser = DS_server(id=guild.id)
+                ser.initialize()
+                ds.write(ser)
 
     @loop(hours=3.0)
     async def loop_update(self):
-        self.update_db()
+        print("update")
+        self.update_ds()
         pass
