@@ -5,3 +5,4 @@ test_ds.py
 Pipfile.lock
 testfolder
 __pycache__
+aws
