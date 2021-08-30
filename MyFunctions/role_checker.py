@@ -13,6 +13,8 @@ from discord import (
 from discord.ext.commands import Cog, Bot, Context, check
 from discord.abc import GuildChannel, PrivateChannel
 
+from MyDataStock.DataStocks import DS_servers
+
 
 async def isroleupper(role_id: int, user: Member, guild: Guild, ignore_same=True) -> bool:
     """
@@ -37,10 +39,15 @@ def check_role_is_upper_member():
     """
 
     async def predicate(ctx: Context):
-        return await isroleupper(
-            role_id=ctx.bot.config.adminrole,
-            user=ctx.author,
-            guild=ctx.guild,
-        )
+        ds = DS_servers().get(ctx.guild.id)
+        role_admin = ds.role_admin
+        if role_admin:
+            return await isroleupper(
+                role_id=role_admin,
+                user=ctx.author,
+                guild=ctx.guild,
+            )
+        else:
+            return False
 
     return check(predicate)

@@ -11,6 +11,7 @@ emoji = "*"
 pykakasi = "*"
 neologdn = "*"
 romkan = "*"
+hashids = "*"
 
 [dev-packages]
 flake8 = "*"

@@ -7,17 +7,16 @@ from discord import (
     Message,
     Emoji,
 )
-from discord.ext.commands import Cog, Bot, Context
+from discord.ext.commands import Bot, Context
 from discord.abc import GuildChannel, PrivateChannel
-from MyFunctions.myembed import MyEmbed, scan_footer, edit_embed
+from MyDataStock.MyEmbed import MyEmbed, scan_footer, edit_embed
 from os.path import splitext
+from MyExtensions.app.MyCog import MyCog
 
-# from datetime import datetime
-# from pytz import utc
-# from Cogs.app.MakeEmbed import MakeEmbed
+from bot_define import MyBot
 
 
-class ReactionEvent(Cog, name="ReactionEvent"):
+class ReactionEvent(MyCog, name="ReactionEvent"):
     """
     リアクションに対しての処理
     次に行う処理をbot.configにかんすうごと保存し、ここで呼び出す
@@ -25,9 +24,7 @@ class ReactionEvent(Cog, name="ReactionEvent"):
     era:embed_reaction_action
     """
 
-    qualified_name = "hide"
-
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: MyBot):
         self.bot = bot
 
     async def do_era(self, usr_id: int, ms: Message, react: str, arg: list) -> bool:
@@ -69,7 +66,7 @@ class ReactionEvent(Cog, name="ReactionEvent"):
                 ctx = await self.bot.get_context(ms)
                 return await func(self.bot, usr_id, ctx, react, arg[1:])
 
-    @Cog.listener()
+    @MyCog.listener()
     async def on_raw_reaction_add(self, rrae: RawReactionActionEvent):
         usr = self.bot.get_user(rrae.user_id)
         channel = TextChannel

@@ -4,6 +4,7 @@ import json
 from pprint import pprint
 from os import environ
 from sys import exit
+from MyFunctions.methods import lastone
 
 access_key = str(environ["AWS_ACCESS_KEY_ID"])
 secret_key = str(environ["AWS_SECRET_ACCESS_KEY"])
@@ -57,8 +58,28 @@ class DS:
 
     def pull(self):
         dict_data = self.io.get()
+        # print(dict_data)
         for symbol in list(dict_data.keys()):
-            exec(f"self.{symbol}={str(dict_data.get(symbol))}")
+            temp = dict_data.get(symbol)
+            data_text = str()
+            if isinstance(temp, list):
+                data_text = "["
+                for t, flag in lastone(temp):
+                    if not isinstance(t, str):
+                        t = str(t)
+                    else:
+                        t = "'" + t + "'"
+                    if flag:
+                        data_text += t
+                    else:
+                        data_text += (t + ",")
+                data_text += "]"
+            elif isinstance(temp, str):
+                data_text = "'" + temp + "'"
+            else:
+                data_text = str(temp)
+
+            exec(f"self.{symbol}={data_text}")
         return self
 
 
@@ -69,7 +90,11 @@ class DS_empty:
         self.id = id
 
     def change(self, name, value):
-        exec(f"self.{str(name)}={value}")
+        if name:
+            if value:
+                exec(f"self.{str(name)}={value}")
+            else:
+                exec(f"self.{str(name)}=None")
 
 
 class DS_mass:
@@ -97,3 +122,16 @@ class DS_mass:
 
     def get(self, id):
         return self.dict_DS.get(str(id))
+
+    def delete(self, id):
+        temp_dict = self.io.get()
+        temp_dict.pop(id)
+        self.io.put(temp_dict)
+
+    def clear(self):
+        temp_dict = self.io.get()
+        temp = temp_dict.get("DEFAULT")
+        temp_dict = dict()
+        if temp:
+            temp_dict.update({"DEFAULT": temp})
+        self.io.put(temp_dict)

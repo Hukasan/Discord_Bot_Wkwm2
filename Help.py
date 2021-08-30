@@ -2,7 +2,7 @@ from discord import Emoji
 from discord.ext.commands import Cog, Bot, HelpCommand, Group, Command, Context
 import sys
 
-from MyFunctions.myembed import MyEmbed
+from MyDataStock.MyEmbed import MyEmbed
 from MyFunctions.inputassist import hyokiyure
 
 EMBED_IDENTIFIER = "HELP_TREE"
@@ -16,16 +16,13 @@ class Help(HelpCommand):
         self.no_category_name = "Help"  # カテゴリが見つからなかった場合のカテゴリ
         self.command_attrs["description"] = "このメッセージを表示"
         self.command_attrs["help"] = "このBOTのヘルプコマンドです。"
-        self.command_attrs["aliases"] = ["he", "herupu", "bot", "info"]
+        self.command_attrs["aliases"] = ["he", "herupu"]
         self.help_dict = dict()
-        self.dfembed = MyEmbed().clone()
+        self.dfembed = MyEmbed()
         self.dfembed.change(
-            help_mode=True,
-            header="ℹBotInfo",
-            header_icon=False,
-            footer_arg=EMBED_IDENTIFIER,
-            time=False,
-            dust=True,
+            time=True,
+            attr="Help",
+            mention_author=True,
         )
         self.emojis = [
             "1️⃣",
@@ -89,42 +86,38 @@ class Help(HelpCommand):
         content = str()
         count = 0
         cog_name_list = list()
-        dict_setup = self.context.bot.dict_setup
-        cog = Cog
         for cog in mapping:
             cog_name = cog.qualified_name if cog else self.no_category_name
 
-            if (cog_name == "Help") | (cog_name == "hide"):
+            if (cog_name in ["Help", "hide", "main"]):
                 continue
             content += f"**{self.emojis[count]}{cog_name}**\r"
             count += 1
             cog_name_list.append(cog.__class__.__name__)
-        # opt = me.MyEmbed
         self.help_dict.update({"bot": cog_name_list})
-        opt = MyEmbed
-        opt = self.dfembed.clone(self.context)
-        opt.change(
-            thumbnail=True,
-            title=self.context.bot.user.name,
-            description=str(
-                f"⌘prifex=> **{str(self.context.bot.command_prefix[0])}** \n" f"{self.context.bot.description}\n"
+        embed = self.dfembed.clone(self.context)
+        dict_btm_down = dict()
+        for count, emoji in enumerate(self.emojis[:(count)]):
+            dict_btm_down.update({emoji: cog_name_list[count]})
+        embed.change(
+            title="Help",
+            text_main=str(
+                f"⌘prifex : **{str(self.context.bot.command_prefix[0])}** \n" f"{self.context.bot.description}\n"
             ),
-            bottom_down=self.emojis[:(count)],
-            args_bottom_down=cog_name_list,
+            btm_down=dict_btm_down
         )
-        opt.add(
-            name="> Main Command",
+        embed.add(
+            name="> MainCmd",
             value=f"・**{self.context.prefix}help**\n--{self.command_attrs['description']}\n",
         )
-        opt.add(name="> 💠Command List", value=content)
-        opt.add(name="> Invite click here⇓", value=f"{dict_setup['INVITE']}")
-        opt.add(
-            name=f"> Suport click here⇓",
-            value=str(f"{dict_setup['SERVER']}\r" f"{dict_setup['GITHUB']}"),
-        )
-        opt.footer_arg_add("bot")
-        opt.bottom_up = list()
-        await opt.sendEmbed()
+        embed.add(name="> Setting", value="リアクションを押して詳細表示\r" + content)
+        # opt.add(name="> Invite click here⇓", value=f"{ds_bot.links.get('InviteThis')}")
+        # opt.add(
+        #     name=f"> Suport click here⇓",
+        #     value=),
+        # )
+        embed.args.append("bot")
+        await embed.sendEmbed()
 
     async def send_cog_help(self, cog: Cog):
         # embed = me.MyEmbed
@@ -166,7 +159,7 @@ class Help(HelpCommand):
         embed = self.dfembed.clone(ctx=self.context)
         # value = "`" + "`, `".join(group.aliases) + "`"
         tab = "|"
-        value = "以下の言葉でも呼び出し可能です"
+        value = "別名"
         count = 0
         for index, a in enumerate(group.aliases):
             if index == (len(group.aliases) - 1):

@@ -8,6 +8,7 @@ from os import environ
 
 from pathlib import Path
 
+
 intents = Intents.all()
 intents.typing = False
 intents.bans = False
@@ -16,13 +17,18 @@ intents.invites = False
 intents.voice_states = False
 intents.dm_messages = False
 intents.dm_reactions = False
+intents.dm_typing = False
+intents.typing = False
+intents.webhooks = False
+intents.guild_typing = False
+intents.invites = False
 
 
 class MyBot(Bot):
 
     name_project = str()
     funcs = {}
-    list_load_first = False
+    load_first = True
     list_func_loop = []
     list_func_ready = []
     ms_dict = {}
@@ -42,30 +48,25 @@ class MyBot(Bot):
 
     def __init__(self):
         self.ds_bot = DS_bot().pull()
+        # print(self.ds_bot.prefix)
         super().__init__(
             description=self.ds_bot.desc,
             intents=intents,
             case_insensitive=True,
-            command_prefix=self.ds_bot.prefix
+            command_prefix=self.ds_bot.prefix,
         )
         extentions_folder = environ["DISCORD_BOT_EXTENTIONS_FOLDER"]
         self.name_project = environ["DISCORD_BOT_PROJECT_NAME"]
         self.help_command = Help()
-        self.list_func_loop.append(self.loop_update)
 
         for f in Path(extentions_folder).glob("*.py"):
             self.load_extension(f"{extentions_folder}.{f.stem}")
 
     async def on_ready(self):
-        if not (self.list_load_first):
+        if not(self.load_first):
             return
-        else:
-            self.list_load_first = False
-
-        self.update_ds()
-
-        for func in self.list_func_loop:
-            await func.start()
+        self.load_first = False
+        self.loop_update.start()
         if self.list_func_ready:
             for func in self.list_func_ready:
                 await func()
@@ -73,8 +74,8 @@ class MyBot(Bot):
     def update_ds(self):
         ds = DS_servers().pull()
         for guild in self.guilds:
-            guild = Guild
             if not(ds.get(guild.id)):
+                print("init_")
                 ser = DS_server(id=guild.id)
                 ser.initialize()
                 ds.write(ser)
@@ -83,4 +84,6 @@ class MyBot(Bot):
     async def loop_update(self):
         print("update")
         self.update_ds()
+        for func in self.list_func_loop:
+            await func(self)
         pass
